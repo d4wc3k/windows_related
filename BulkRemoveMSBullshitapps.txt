@@ -1,0 +1,5 @@
+1. Put Name od apps into .txt file f.g D:\Apps.txt
+	
+2) 
+	a) $APPS = Get-Content D:\Apps.txt
+	b) foreach ($ITEM in $APPS) { Get-AppxPackage -AllUsers -Name  $ITEM| Remove-AppxPackage -AllUsers -Verbose }

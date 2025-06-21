@@ -1,0 +1,278 @@
+#########################################################
+Check OS Health
+#########################################################
+
+1) sfc /scannow
+2) DISM /Online /Cleanup-Image /CheckHealth
+3) DISM /Online /Cleanup-Image /ScanHealth
+4) DISM.exe /Online /Cleanup-image /RestoreHealth
+
+Cleaning image startup
+Dism.exe /online /Cleanup-Image /StartComponentCleanup
+
+Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+#
+###########################################################
+Clean powershell history
+###########################################################
+
+Clear-History
+
+###########################################################
+#
+###########################################################
+Check/Defrag disk
+###########################################################
+
+chkntfs C:
+
+chkdsk /F /R C:
+
+Defrag C: /U /V
+
+Defrag C: /U /V /l
+
+###########################################################
+#
+Enable UTC Time Zone DualBoot:
+
+HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation
+
+New DWORD 
+RealTimeIsUniversal -> 1
+
+#
+###########################################################
+#
+###########################################################
+#
+Clear Software Distribution directory:
+
+net stop wuauserv
+
+net stop bits
+
+net stop cryptsvc
+#
+###########################################################
+Recall disabling
+#
+Dism /Online /Get-Featureinfo /Featurename:Recall
+Dism /Online /Disable-Feature /Featurename:Recall
+###########################################################
+###########################################################
+## reserved space commands
+
+# check status
+DISM /Online /Get-ReservedStorageState
+Get-WindowsReservedStorageState
+
+# Disable
+DISM /Online /Set-ReservedStorageState /State:Disabled
+Set-WindowsReservedStorageState -State Disabled
+
+# Enable
+DISM /Online /Set-ReservedStorageState /State:Enabled
+Set-WindowsReservedStorageState -State Enabled
+
+###########################################################
+###########################################################
+## Compact OS 
+
+# Status
+compact /compactos:query
+
+# Enable
+compact /compactos:always
+
+# Disable
+compact /compactos:never
+
+###########################################################
+###########################################################
+#
+Update powershell help files:
+
+Update-Help -Verbose -Force -ErrorAction SilentlyContinue
+
+###########################################################
+#
+###########################################################
+## Old context menu in Windows 11
+
+1) Open in registry editor following object: Computer\HKEY_CURRENT_USER\SOFTWARE\CLASSES\CLSID\
+2) New Key -> {86ca1aa0-34aa-4e8b-a509-50c905bae2a2} -> InprocServer32
+3) Open Default and click ok ("value not set" change to just empty value)
+###########################################################
+###########################################################
+##
+###########################################################
+## Legacy recovery menu with F8
+
+      If (!(Test-Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Configuration Manager\LastKnownGood')) {
+            New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Configuration Manager\LastKnownGood' -Force | Out-Null
+      }
+      New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Configuration Manager\LastKnownGood' -Name 'Enabled' -Type DWord -Value 1 -Force
+      Start-Process -FilePath cmd.exe -ArgumentList '/c bcdedit /Set {Current} BootMenuPolicy Legacy' -Wait
+
+##      
+#
+###########################################################
+
+###########################################################
+###########################################################
+# Install ms store on ltsc
+https://www.minitool.com/news/reinstall-built-in-software-windows-11.html
+
+#
+wsreset -i
+
+
+###########################################################
+FIX explorer menu issue
+https://borncity.com/win/2024/11/04/windows-11-24h2-explorer-bug-opens-menu-upwards-workaround/
+#
+ViveTOOL
+https://github.com/thebookisclosed/ViVe/releases
+#
+COMMAND
+vivetool.exe /disable /id:51960011
+#
+#
+###########################################################
+Delete all logs
+
+for /F "tokens=*" %1 in ('wevtutil.exe el') DO wevtutil.exe cl "%1"
+
+OR
+ Get-WinEvent -ListLog * | where {$_.RecordCount} | ForEach-Object -Process { [System.Diagnostics.Eventing.Reader.EventLogSession]::GlobalSession.ClearLog($_.LogName) }
+OR 
+Get-EventLog -LogName * | ForEach { Clear-EventLog $_.Log } 
+OR
+ wevtutil el | Foreach-Object {wevtutil cl "$_"}
+###########################################################
+
+Detailed BSOD
+Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl
+
+DWORD (32 bit)
+DisplayParameters -> 1
+DisableEmoticon -> 1
+
+###########################################################
+Remove Home and Gallery from explorer
+
+Enable:
+      REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}" /f
+      REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{f874310e-b6b7-47dc-bc84-b9e6b38f5903}" /f
+      REG ADD "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /f /v "LaunchTo" /t REG_DWORD /d "1"
+
+Disable:
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}" /f /ve /t REG_SZ /d "{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}"
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{f874310e-b6b7-47dc-bc84-b9e6b38f5903}" /f /ve /t REG_SZ /d "CLSID_MSGraphHomeFolder"
+      REG DELETE "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /f /v "LaunchTo"
+###########################################################
+
+Enable End Task With Right Click¶
+
+Enable:
+$path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"
+      $name = "TaskbarEndTask"
+      $value = 1
+
+      # Ensure the registry key exists
+      if (-not (Test-Path $path)) {
+        New-Item -Path $path -Force | Out-Null
+      }
+
+      # Set the property, creating it if it doesn't exist
+      New-ItemProperty -Path $path -Name $name -PropertyType DWord -Value $value -Force | Out-Null
+
+Disable:
+$path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"
+      $name = "TaskbarEndTask"
+      $value = 0
+
+      # Ensure the registry key exists
+      if (-not (Test-Path $path)) {
+        New-Item -Path $path -Force | Out-Null
+      }
+
+      # Set the property, creating it if it doesn't exist
+      New-ItemProperty -Path $path -Name $name -PropertyType DWord -Value $value -Force | Out-Null
+
+###########################################################
+Enabling Verbose Logon
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "VerboseStatus" /t REG_DWORD /d 1 /f
+
+###########################################################
+
+Create Restore Point
+
+Enable-ComputerRestore -Drive $env:SystemDrive 
+Checkpoint-Computer -Description "RestorePoint1" -RestorePointType "MODIFY_SETTINGS"
+
+###########################################################
+Enable ultimate performace mode
+
+powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
+
+
+###########################################################
+classic menu new text file option
+
+Open the registry editor and move to HKEY_CLASSES_ROOT\.txt
+Add a new Key called ShellNew
+Move to the new key (i.e. HKEY_CLASSES_ROOT\.txt\ShellNew)
+Add a new String Value with the name NullFile
+
+Move to HKEY_CLASSES_ROOT\txtfilelegacy
+Change the (Default) value to Text File (or any other name you'd like)
+
+
+
+###########################################################
+Powershell - installing updates
+https://woshub.com/pswindowsupdate-module/
+###########################################################
+Tune of pausing windows updates 
+
+https://www.top-password.com/blog/pause-windows-update-in-windows-11/
+
+a) HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings
+
+b) New -> DWORD (32-bit) Value 
+
+c) FlightSettingsMaxPauseDays -> decimal
+
+d) set value
+
+###########################################################
+Remove recommended section in Windows 11 Start Menu
+
+a) Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\device
+
+
+New Key (if 'Start' key doesn't exist ) -> Start
+
+New DWORD -> HideRecommendedSection -> 1
+
+b) Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\device
+
+New Key (if 'Education' key doesn't exist ) -> Education
+
+New DWORD -> IsEducationEnvironment -> 1
+
+c) Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\
+
+New Key (if 'Explorer' key doesn't exist ) -> Explorer
+
+New DWORD -> HideRecommendedSection -> 1
+
+###########################################################
+
+Backup CMD:
+
+wbAdmin start backup -backupTarget:D: -include:C: -allCritical -quiet
+
+###########################################################

@@ -1,0 +1,19 @@
+======================================================================================================================================================================================
+WITH integrity check:
+
+cryptsetup --debug --type luks2 -v --verify-passphrase --cipher aes-xts-plain64 --key-size 512 --key-slot 0  --key-description "Basic key" --hash sha256 --iter-time 13964 --pbkdf argon2id  --pbkdf-memory 524288 --pbkdf-parallel 4 --use-random --sector-size 4096 --label DawCekBackup-locked --timeout 30 --integrity hmac-sha256 luksFormat /dev/sdb1
+
+======================================================================================================================================================================================
+WITHOUT integrity check:
+cryptsetup --debug --type luks2 -v --verify-passphrase --cipher aes-xts-plain64 --key-size 512 --key-slot 0  --key-description "Basic key" --hash sha256 --iter-time 17815 --pbkdf argon2id  --pbkdf-memory 524288 --pbkdf-parallel 4 --use-random --sector-size 4096 --label dawcek-locked --timeout 30 luksFormat /dev/sdb1
+
+
+======================================================================================================================================================================================
+mkfs.ext4 -v -b 4096 -cc -e remount-ro -j  -L "dawcek" -m 4 -t ext4 -U time
+======================================================================================================================================================================================
+Reserved blocks settings
+4 GiB -> 4096 MiB -> 4194304 KiB -> 4294967296 B
+Sector size -> 4096
+Number of sectors: 4294967296/4096 -> 1048576
+
+tune2fs -r 1048576
