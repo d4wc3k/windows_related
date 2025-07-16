@@ -1,0 +1,59 @@
+#######################################################################################################################
+## Install MSI module
+## URL: https://www.powershellgallery.com/packages/MSI/3.2.26.21626
+#
+Install-Module -Name MSI
+#
+## Set execution policy
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+#
+## import module
+Import-Module MSI
+#
+#######################################################################################################################
+## PATH for Installer dir
+$WIN_Installer_PATH="$env:WINDIR\Installer";
+#
+## All *.MSI Files
+$MSI_FILES = Get-ChildItem $WIN_Installer_PATH -Filter *.msi -Recurse -ErrorAction SilentlyContinue;
+echo $MSI_FILES | select Name,FullName,Attributes
+#
+## All *.MSP Files
+$MSP_FILES = Get-ChildItem $WIN_Installer_PATH *.msp -Recurse -ErrorAction SilentlyContinue;
+echo $MSP_FILES | select Name,FullName,Attributes
+#######################################################################################################################
+#
+## List MSI files associated with installation
+$INSTALLED_MSI_FILES = Get-MSIProductInfo 
+echo $INSTALLED_MSI_FILES | select Name,LocalPackage,ProductCode,PackageCode;
+#
+## List MSP files associated with installation
+$INSTALLED_MSP_FILES=Get-MSIPatchInfo
+echo $INSTALLED_MSP_FILES | select Name,LocalPackage,ProductCode,PackageCode;
+#######################################################################################################################
+#
+## Getting orphaned MSI files
+$ORPHANED_MSI_FILES = $MSI_FILES | Where-Object { $INSTALLED_MSI_FILES.LocalPackage -notcontains $_.FullName };
+echo $ORPHANED_MSI_FILES | select Name,FullName,Attributes
+#
+## Getting orphaned MSP files
+$ORPHANED_MSP_FILES = $MSP_FILES | Where-Object { $INSTALLED_MSP_FILES.LocalPackage -notcontains $_.FullName };
+echo $ORPHANED_MSP_FILES | select Name,FullName,Attributes
+#
+#######################################################################################################################
+## Moving Orphaned MSI files to TMP directory
+$BACKUP_DIR = "D:\TMP"
+$ORPHANED_MSI_FILES | Move-Item -Destination $BACKUP_DIR
+#
+## Moving Orphaned MSI files to TMP directory
+$BACKUP_DIR = "D:\TMP"
+$ORPHANED_MSP_FILES  | Move-Item -Destination $BACKUP_DIR
+#
+#######################################################################################################################
+## Deleting Orphaned MSI files
+$ORPHANED_MSI_FILES | Remove-Item -Force -ErrorAction SilentlyContinue
+#
+## Deleting Orphaned MSP files
+$ORPHANED_MSP_FILES | Remove-Item -Force -ErrorAction SilentlyContinue
+#
+#######################################################################################################################
