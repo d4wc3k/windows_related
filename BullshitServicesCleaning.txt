@@ -1,0 +1,30 @@
+## edgeupdate
+sc stop edgeupdate
+sc config "edgeupdate" start=disabled
+sc delete edgeupdate
+#
+## edgeupdatem
+sc stop edgeupdatem
+sc config "edgeupdatem" start=disabled
+sc delete edgeupdatem
+#
+## XboxGipSvc
+sc stop XboxGipSvc
+sc config "XboxGipSvc" start=disabled
+sc delete XboxGipSvc
+#
+## XblAuthManager
+sc stop XblAuthManager
+sc config "XblAuthManager" start=disabled
+sc delete XblAuthManager
+#
+## XblGameSave
+sc stop XblGameSave
+sc config "XblGameSave" start=disabled
+sc delete XblGameSave
+#
+##XboxNetApiSvc
+sc stop XboxNetApiSvc
+sc config "XboxNetApiSvc" start=disabled
+sc delete XboxNetApiSvc
+#
