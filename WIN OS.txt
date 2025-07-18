@@ -24,6 +24,8 @@ Clear-History
 Check/Defrag disk
 ###########################################################
 
+mountvol
+
 chkntfs C:
 
 chkdsk /F /R C:
